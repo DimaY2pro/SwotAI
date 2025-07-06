@@ -1,0 +1,1 @@
+# AI SWOT Career Builder (Vite + React)
