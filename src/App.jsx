@@ -253,6 +253,7 @@ Replace "{careerGoal}" in your actual output with the user's provided career goa
     }
   };
 
+
   const fetchMoreIdeas = async (careerGoal, swotCategory, specificAiQuestion, userAnswer) => {
     if (!import.meta.env.VITE_OPENAI_API_KEY) {
       console.error("OpenAI API key not found for fetching more ideas.");
