@@ -13,7 +13,7 @@ const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack, ca
     setIsLoadingSuggestions(true);
     setAiSuggestions([]); // Clear previous suggestions
     // try/catch is now within fetchAISuggestions in App.jsx
-    const suggestions = await fetchAISuggestions(section, careerGoal);
+    const suggestions = await fetchAISuggestions(section, careerGoal, prompts); // Added prompts here
     setAiSuggestions(suggestions);
     // If the first suggestion starts with "Error:" or "Failed", or "OpenAI API key not configured"
     // it's likely an error message we want to highlight or handle differently.
