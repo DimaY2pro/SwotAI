@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import OpenAI from "openai";
 import SWOTSection from "./components/SWOTSection";
 import PDFButton from "./components/PDFButton";
 
@@ -78,37 +79,61 @@ const handleNext = () => {
     if (currentIndex > 0) setCurrentSection(steps[currentIndex - 1]);
   };
 
-  // Mock AI Suggestion Function
-  const fetchAISuggestions = async (sectionType, goal) => {
-    console.log(`Fetching AI suggestions for ${sectionType} related to career goal: ${goal}`);
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  const openai = new OpenAI({
+    apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+    dangerouslyAllowBrowser: true, // Required for client-side usage
+  });
 
-    // Mock suggestions based on section type
-    // In a real app, this would be an API call to a generative AI model
-    const mockData = {
-      strengths: [
-        `Strong analytical skills relevant to ${goal}`,
-        `Effective communication for ${goal} presentations`,
-        `Proactive learning ability for ${goal} technologies`
-      ],
-      weaknesses: [
-        `Limited experience in specific tools for ${goal}`,
-        `Public speaking anxiety in ${goal} contexts`,
-        `Delegation skills when leading ${goal} projects`
-      ],
-      opportunities: [
-        `Growing demand for ${goal} professionals`,
-        `Networking events for ${goal} experts`,
-        `Online courses to upskill in ${goal} areas`
-      ],
-      threats: [
-        `Rapid technological changes in the ${goal} field`,
-        `High competition for ${goal} positions`,
-        `Economic downturn impacting ${goal} opportunities`
-      ]
-    };
-    return mockData[sectionType] || [`No specific suggestions for ${sectionType} regarding ${goal}. Consider general good practices.`];
+  const fetchAISuggestions = async (sectionType, goal) => {
+    if (!import.meta.env.VITE_OPENAI_API_KEY) {
+      console.error("OpenAI API key not found.");
+      return ["OpenAI API key not configured. Please set VITE_OPENAI_API_KEY in your .env file."];
+    }
+
+    const prompt = `
+      You are an expert career advisor.
+      Generate 3-5 concise bullet points for the SWOT category "${sectionType.toUpperCase()}" based on the career goal: "${goal}".
+      Focus on actionable and specific suggestions. Each point should be a short phrase.
+      Return the suggestions as a list of strings. For example:
+      - Suggestion 1
+      - Suggestion 2
+      - Suggestion 3
+
+      If the career goal or SWOT category is too vague, provide general advice for that category.
+      Do not include any introductory or concluding remarks, only the bullet points.
+    `;
+
+    console.log(`Fetching AI suggestions for ${sectionType} related to career goal: ${goal}`);
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "You are an expert career advisor providing SWOT analysis suggestions." },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 150,
+        n: 1,
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (content) {
+        // Parse the content, assuming suggestions are newline-separated and may start with '-' or '*'
+        const suggestions = content
+          .split('\n')
+          .map(s => s.replace(/^[-*]\s*/, '').trim()) // Remove leading bullet points and trim whitespace
+          .filter(s => s.length > 0); // Remove any empty lines
+        return suggestions.length > 0 ? suggestions : ["No specific suggestions generated. Try rephrasing your goal."];
+      }
+      return ["No suggestions received from AI."];
+    } catch (error) {
+      console.error("Error fetching AI suggestions:", error);
+      if (error.response && error.response.status === 401) {
+        return ["Error: Invalid OpenAI API key or insufficient credits."];
+      }
+      return ["Failed to fetch suggestions from AI. Check console for details."];
+    }
   };
 
   return (

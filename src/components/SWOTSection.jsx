@@ -12,13 +12,14 @@ const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack, ca
     }
     setIsLoadingSuggestions(true);
     setAiSuggestions([]); // Clear previous suggestions
-    try {
-      const suggestions = await fetchAISuggestions(section, careerGoal);
-      setAiSuggestions(suggestions);
-    } catch (error) {
-      console.error("Failed to fetch AI suggestions:", error);
-      setAiSuggestions(["Could not load suggestions at this time."]);
-    }
+    // try/catch is now within fetchAISuggestions in App.jsx
+    const suggestions = await fetchAISuggestions(section, careerGoal);
+    setAiSuggestions(suggestions);
+    // If the first suggestion starts with "Error:" or "Failed", or "OpenAI API key not configured"
+    // it's likely an error message we want to highlight or handle differently.
+    // For now, they will be displayed as regular suggestions.
+    // A more sophisticated approach might involve returning an object { suggestions: [], error: null }
+    // or { suggestions: [], error: "message" } from fetchAISuggestions.
     setIsLoadingSuggestions(false);
   };
 
