@@ -118,16 +118,20 @@ const PDFButton = ({ menteeName, careerGoal, responses }) => {
     // Strengths and Weaknesses (Top Row)
     let yAfterStrengths = drawSwotSection("strengths", currentX, currentY);
     let yAfterWeaknesses = drawSwotSection("weaknesses", currentX + columnWidth + columnGap, currentY);
-    maxYThisRow = Math.max(yAfterStrengths, yAfterWeaknesses);
+    // maxYThisRow = Math.max(yAfterStrengths, yAfterWeaknesses); // No longer needed to stack directly
 
-    // Opportunities and Threats (Bottom Row)
-    currentY = maxYThisRow; // Start next row below the tallest of the previous row
+    // --- Force page break for Opportunities and Threats ---
+    // Ensure footer is drawn on the current page before adding a new one, if it's not already the first page.
+    if (pdf.internal.getCurrentPageInfo().pageNumber > 0) {
+        drawFooter(pdf, pageWidth, brandColors.navy, "www.youthtoprofessionals.org");
+    }
+    pdf.addPage();
+    drawHeader(pdf, pageWidth, margin, brandColors.navy);
+    currentY = margin + 60; // Reset Y to top of new page (below header)
+    maxYThisRow = currentY; // Reset maxYThisRow for the new page context
     currentX = margin; // Reset X for the new row
 
-    // Check for page break before starting the second row, if it's too close to footer
-    checkAndAddPage(headerHeight + contentPaddingTop + lineHeight + sectionPaddingBottom);
-
-
+    // Opportunities and Threats (Now on a New Page)
     let yAfterOpportunities = drawSwotSection("opportunities", currentX, currentY);
     let yAfterThreats = drawSwotSection("threats", currentX + columnWidth + columnGap, currentY);
     maxYThisRow = Math.max(yAfterOpportunities, yAfterThreats);
