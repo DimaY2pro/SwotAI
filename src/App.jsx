@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import OpenAI from "openai";
 import SWOTSection from "./components/SWOTSection";
 import PDFButton from "./components/PDFButton";
+import DOCXButton from "./components/DOCXButton"; // Import DOCXButton
 
 const swotPrompts = {
   strengths: [
@@ -395,6 +396,11 @@ Replace "{careerGoal}" in your actual output with the user's provided career goa
     Back
   </button>
   <PDFButton
+    menteeName={menteeName}
+    careerGoal={careerGoal}
+    responses={responses}
+  />
+  <DOCXButton
     menteeName={menteeName}
     careerGoal={careerGoal}
     responses={responses}
