@@ -84,16 +84,25 @@ const handleNext = () => {
     dangerouslyAllowBrowser: true, // Required for client-side usage
   });
 
-  const fetchAISuggestions = async (sectionType, goal) => {
+  const fetchAISuggestions = async (sectionType, goal, sectionPrompts) => {
     if (!import.meta.env.VITE_OPENAI_API_KEY) {
       console.error("OpenAI API key not found.");
       return ["OpenAI API key not configured. Please set VITE_OPENAI_API_KEY in your .env file."];
     }
 
+    const formattedPrompts = sectionPrompts && sectionPrompts.length > 0
+      ? `The guiding questions for this section are:\n${sectionPrompts.map((q, i) => `${i + 1}. ${q}`).join('\n')}`
+      : "No specific guiding questions provided for this section.";
+
     const prompt = `
       You are an expert career advisor.
-      Generate 3-5 concise bullet points for the SWOT category "${sectionType.toUpperCase()}" based on the career goal: "${goal}".
-      Focus on actionable and specific suggestions. Each point should be a short phrase.
+      The user's career goal is: "${goal}".
+      They are currently working on the "${sectionType.toUpperCase()}" section of their SWOT analysis.
+      ${formattedPrompts}
+
+      Based on their career goal AND the guiding questions (if provided), generate 3-5 concise bullet points for "${sectionType.toUpperCase()}".
+      Focus on actionable and specific suggestions that directly help answer these questions or reflect on the SWOT category in light of the career goal.
+      Each point should be a short phrase.
       Return the suggestions as a list of strings. For example:
       - Suggestion 1
       - Suggestion 2
@@ -103,7 +112,8 @@ const handleNext = () => {
       Do not include any introductory or concluding remarks, only the bullet points.
     `;
 
-    console.log(`Fetching AI suggestions for ${sectionType} related to career goal: ${goal}`);
+    console.log(`Fetching AI suggestions for ${sectionType} related to career goal: ${goal} using specific prompts.`);
+    // console.log("Full prompt to AI:", prompt); // Uncomment for deep debugging
 
     try {
       const completion = await openai.chat.completions.create({
