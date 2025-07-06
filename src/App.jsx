@@ -229,11 +229,6 @@ Replace "{careerGoal}" in your actual output with the user's provided career goa
     }
   };
 
-  const openai = new OpenAI({
-    apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-    dangerouslyAllowBrowser: true, // Required for client-side usage
-  });
-
   const fetchAISuggestions = async (sectionType, goal, sectionPrompts) => {
     if (!import.meta.env.VITE_OPENAI_API_KEY) {
       console.error("OpenAI API key not found.");
