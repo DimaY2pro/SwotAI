@@ -78,6 +78,39 @@ const handleNext = () => {
     if (currentIndex > 0) setCurrentSection(steps[currentIndex - 1]);
   };
 
+  // Mock AI Suggestion Function
+  const fetchAISuggestions = async (sectionType, goal) => {
+    console.log(`Fetching AI suggestions for ${sectionType} related to career goal: ${goal}`);
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Mock suggestions based on section type
+    // In a real app, this would be an API call to a generative AI model
+    const mockData = {
+      strengths: [
+        `Strong analytical skills relevant to ${goal}`,
+        `Effective communication for ${goal} presentations`,
+        `Proactive learning ability for ${goal} technologies`
+      ],
+      weaknesses: [
+        `Limited experience in specific tools for ${goal}`,
+        `Public speaking anxiety in ${goal} contexts`,
+        `Delegation skills when leading ${goal} projects`
+      ],
+      opportunities: [
+        `Growing demand for ${goal} professionals`,
+        `Networking events for ${goal} experts`,
+        `Online courses to upskill in ${goal} areas`
+      ],
+      threats: [
+        `Rapid technological changes in the ${goal} field`,
+        `High competition for ${goal} positions`,
+        `Economic downturn impacting ${goal} opportunities`
+      ]
+    };
+    return mockData[sectionType] || [`No specific suggestions for ${sectionType} regarding ${goal}. Consider general good practices.`];
+  };
+
   return (
     <div className="min-h-screen bg-white text-gray-900 p-6 font-sans">
       {currentSection === "intro" && (
@@ -118,6 +151,8 @@ const handleNext = () => {
           onChange={(index, value) => handleChange(currentSection, index, value)}
           onNext={handleNext}
           onBack={handleBack}
+          careerGoal={careerGoal}
+          fetchAISuggestions={fetchAISuggestions}
         />
       )}
 

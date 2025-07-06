@@ -1,7 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 
-const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack }) => {
+const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack, careerGoal, fetchAISuggestions }) => {
   const isComplete = responses.every((ans) => ans.trim() !== "");
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+
+  const handleFetchSuggestions = async () => {
+    if (!careerGoal) {
+      alert("Please ensure a career goal is set to get relevant suggestions.");
+      return;
+    }
+    setIsLoadingSuggestions(true);
+    setAiSuggestions([]); // Clear previous suggestions
+    try {
+      const suggestions = await fetchAISuggestions(section, careerGoal);
+      setAiSuggestions(suggestions);
+    } catch (error) {
+      console.error("Failed to fetch AI suggestions:", error);
+      setAiSuggestions(["Could not load suggestions at this time."]);
+    }
+    setIsLoadingSuggestions(false);
+  };
 
   return (
     <div className="p-6 bg-white rounded shadow-md max-w-3xl mx-auto">
@@ -21,6 +40,26 @@ const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack }) 
           />
         </div>
       ))}
+
+      <div className="my-6">
+        <button
+          onClick={handleFetchSuggestions}
+          disabled={isLoadingSuggestions || !careerGoal}
+          className="bg-[#FFBA00] text-[#152840] px-4 py-2 rounded hover:bg-[#FFD700] disabled:bg-gray-300"
+        >
+          {isLoadingSuggestions ? "Loading Suggestions..." : "Get AI Suggestions"}
+        </button>
+        {aiSuggestions.length > 0 && (
+          <div className="mt-4 p-4 border border-gray-200 rounded bg-gray-50">
+            <h4 className="font-semibold text-md mb-2 text-[#183B68]">AI Generated Suggestions:</h4>
+            <ul className="list-disc pl-5 space-y-1 text-sm">
+              {aiSuggestions.map((suggestion, idx) => (
+                <li key={idx}>{suggestion}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
 
       <div className="mt-4 flex justify-between">
         <button
