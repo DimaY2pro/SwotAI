@@ -151,31 +151,39 @@ Your task is to generate a structured SWOT analysis framework based on the user'
 Career Goal: "${careerGoal}"
 
 For EACH of the four SWOT categories (Strengths, Weaknesses, Opportunities, Threats), you must:
-1. Generate exactly 3 insightful and distinct questions that will help the user critically assess that category in relation to their stated career goal.
+1. Generate exactly 5 insightful and distinct questions that will help the user critically assess that category in relation to their stated career goal.
 2. For each generated question, provide a concise, illustrative sample answer (1-2 sentences) that is also tailored to the career goal. This sample answer should exemplify the type of reflection expected.
 
 The entire output MUST be a single, valid JSON object. Do not include any text or explanations before or after the JSON object.
-The JSON object must have the following structure:
+The JSON object must have the following structure (showing 3 for brevity, but you must generate 5 for each category):
 {
   "strengths": [
-    { "question": "Generated question 1 about strengths relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 1 for strengths, specific to ${careerGoal}." },
-    { "question": "Generated question 2 about strengths relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 2 for strengths, specific to ${careerGoal}." },
-    { "question": "Generated question 3 about strengths relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 3 for strengths, specific to ${careerGoal}." }
+    { "question": "Generated question 1 for strengths relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 1 for strengths." },
+    { "question": "Generated question 2 for strengths relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 2 for strengths." },
+    { "question": "Generated question 3 for strengths relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 3 for strengths." },
+    { "question": "Generated question 4 for strengths relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 4 for strengths." },
+    { "question": "Generated question 5 for strengths relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 5 for strengths." }
   ],
   "weaknesses": [
-    { "question": "Generated question 1 about weaknesses relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 1 for weaknesses, specific to ${careerGoal}." },
-    { "question": "Generated question 2 about weaknesses relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 2 for weaknesses, specific to ${careerGoal}." },
-    { "question": "Generated question 3 about weaknesses relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 3 for weaknesses, specific to ${careerGoal}." }
+    { "question": "Generated question 1 for weaknesses relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 1 for weaknesses." },
+    { "question": "Generated question 2 for weaknesses relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 2 for weaknesses." },
+    { "question": "Generated question 3 for weaknesses relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 3 for weaknesses." },
+    { "question": "Generated question 4 for weaknesses relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 4 for weaknesses." },
+    { "question": "Generated question 5 for weaknesses relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 5 for weaknesses." }
   ],
   "opportunities": [
-    { "question": "Generated question 1 about opportunities relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 1 for opportunities, specific to ${careerGoal}." },
-    { "question": "Generated question 2 about opportunities relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 2 for opportunities, specific to ${careerGoal}." },
-    { "question": "Generated question 3 about opportunities relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 3 for opportunities, specific to ${careerGoal}." }
+    { "question": "Generated question 1 for opportunities relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 1 for opportunities." },
+    { "question": "Generated question 2 for opportunities relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 2 for opportunities." },
+    { "question": "Generated question 3 for opportunities relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 3 for opportunities." },
+    { "question": "Generated question 4 for opportunities relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 4 for opportunities." },
+    { "question": "Generated question 5 for opportunities relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 5 for opportunities." }
   ],
   "threats": [
-    { "question": "Generated question 1 about threats relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 1 for threats, specific to ${careerGoal}." },
-    { "question": "Generated question 2 about threats relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 2 for threats, specific to ${careerGoal}." },
-    { "question": "Generated question 3 about threats relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 3 for threats, specific to ${careerGoal}." }
+    { "question": "Generated question 1 for threats relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 1 for threats." },
+    { "question": "Generated question 2 for threats relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 2 for threats." },
+    { "question": "Generated question 3 for threats relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 3 for threats." },
+    { "question": "Generated question 4 for threats relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 4 for threats." },
+    { "question": "Generated question 5 for threats relevant to ${careerGoal}?", "sampleAnswer": "Sample answer 5 for threats." }
   ]
 }
 
@@ -332,20 +340,18 @@ Replace "{careerGoal}" in your actual output with the user's provided career goa
       {["strengths", "weaknesses", "opportunities", "threats"].includes(currentSection) && (
         <SWOTSection
           section={currentSection}
-          // Use AI-generated questions if available, otherwise fallback to static or empty
-          prompts={
+          promptItems={ // Pass the full items {question, sampleAnswer}
             aiSwotStructure && aiSwotStructure[currentSection]
-              ? aiSwotStructure[currentSection].map(item => item.question)
-              : swotPrompts[currentSection] // Fallback if AI structure not ready
+              ? aiSwotStructure[currentSection]
+              : swotPrompts[currentSection].map(q => ({ question: q, sampleAnswer: "" })) // Fallback structure
           }
-          // Sample answers would also come from aiSwotStructure, to be handled in SWOTSection in Phase 2
           responses={responses[currentSection]}
           onChange={(index, value) => handleChange(currentSection, index, value)}
           onNext={handleNext}
           onBack={handleBack}
           careerGoal={careerGoal}
-          fetchAISuggestions={fetchAISuggestions}
-          onGoHome={handleGoHome} // Pass handleGoHome as onGoHome prop
+          // fetchAISuggestions={fetchAISuggestions} // To be removed as per user decision
+          onGoHome={handleGoHome}
         />
       )}
 
