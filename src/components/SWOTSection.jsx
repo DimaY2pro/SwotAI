@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack, careerGoal, fetchAISuggestions }) => {
   const isComplete = responses.every((ans) => ans.trim() !== "");
@@ -22,6 +22,11 @@ const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack, ca
     // or { suggestions: [], error: "message" } from fetchAISuggestions.
     setIsLoadingSuggestions(false);
   };
+
+  useEffect(() => {
+    setAiSuggestions([]);
+    setIsLoadingSuggestions(false);
+  }, [section]);
 
   return (
     <div className="p-6 bg-white rounded shadow-md max-w-3xl mx-auto">
