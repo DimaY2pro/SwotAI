@@ -38,12 +38,19 @@ export default function App() {
   const [menteeName, setMenteeName] = useState("");
   const [careerGoal, setCareerGoal] = useState("");
   const [currentSection, setCurrentSection] = useState("intro");
+
+  // State for AI-generated questions and sample answers
+  const [aiSwotStructure, setAiSwotStructure] = useState(null);
+  const [isLoadingSwotStructure, setIsLoadingSwotStructure] = useState(false);
+
+  // Initialize responses based on static prompts initially, will be updated
+  // after AI generates the new structure.
   const [responses, setResponses] = useState({
-  strengths: new Array(swotPrompts.strengths.length).fill(""),
-  weaknesses: new Array(swotPrompts.weaknesses.length).fill(""),
-  opportunities: new Array(swotPrompts.opportunities.length).fill(""),
-  threats: new Array(swotPrompts.threats.length).fill("")
-});
+    strengths: new Array(swotPrompts.strengths.length).fill(""),
+    weaknesses: new Array(swotPrompts.weaknesses.length).fill(""),
+    opportunities: new Array(swotPrompts.opportunities.length).fill(""),
+    threats: new Array(swotPrompts.threats.length).fill("")
+  });
 
 
   const handleChange = (section, index, value) => {
@@ -61,15 +68,46 @@ const handleNext = () => {
       alert("Please fill out both your name and your career goal.");
       return;
     }
+    // === New logic for AI SWOT Structure generation ===
+    setIsLoadingSwotStructure(true);
+    generateAiSwotStructure(careerGoal).then(structure => {
+      setIsLoadingSwotStructure(false);
+      if (structure && !structure.error) {
+        setAiSwotStructure(structure);
+        // Initialize/reset responses state based on the new structure
+        const newResponses = {};
+        for (const key in structure) {
+          if (Array.isArray(structure[key])) {
+            newResponses[key] = new Array(structure[key].length).fill("");
+          }
+        }
+        setResponses(newResponses);
+        setCurrentSection("strengths"); // Proceed to the first SWOT section
+      } else {
+        alert(`Could not generate AI SWOT structure: ${structure?.error || "Unknown error"}`);
+        // Remain on the intro page, do not clear careerGoal here
+        // so the user doesn't have to re-type it if they want to try again.
+      }
+    });
+    return; // Important: Do not fall through to the old setCurrentSection logic
+    // === End of new logic ===
   } else if (["strengths", "weaknesses", "opportunities", "threats"].includes(currentSection)) {
-    const unanswered = responses[currentSection].some(answer => !answer || answer.trim() === "");
+    const unanswered = responses[currentSection]?.some(answer => !answer || answer.trim() === "");
     if (unanswered) {
       alert("Please answer all questions in this section before proceeding.");
       return;
     }
   }
 
-  setCurrentSection(steps[currentIndex + 1]);
+  // This part will now only apply for navigation between SWOT sections and to summary
+  if (currentIndex < steps.length -1 && currentSection !== "intro") {
+    setCurrentSection(steps[currentIndex + 1]);
+  } else if (currentSection === "intro" && !isLoadingSwotStructure && aiSwotStructure) {
+    // This case should ideally be handled by the async flow above for initial load.
+    // If somehow intro is current, and we have structure but not loading, go to strengths.
+    // This might be redundant after the async change.
+    setCurrentSection("strengths");
+  }
 };
 
 
@@ -83,12 +121,112 @@ const handleNext = () => {
     setCurrentSection("intro");
     setMenteeName("");
     setCareerGoal("");
+    // Reset to initial static prompts structure for responses, and clear AI structure
     setResponses({
       strengths: new Array(swotPrompts.strengths.length).fill(""),
       weaknesses: new Array(swotPrompts.weaknesses.length).fill(""),
       opportunities: new Array(swotPrompts.opportunities.length).fill(""),
       threats: new Array(swotPrompts.threats.length).fill("")
     });
+    setAiSwotStructure(null); // Clear the AI-generated structure
+    setIsLoadingSwotStructure(false); // Ensure loading is reset
+  };
+
+  const openai = new OpenAI({
+    apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+    dangerouslyAllowBrowser: true, // Required for client-side usage
+  });
+
+  const generateAiSwotStructure = async (careerGoal) => {
+    if (!import.meta.env.VITE_OPENAI_API_KEY) {
+      console.error("OpenAI API key not found for SWOT structure generation.");
+      // Return an error object or throw an error to be caught by the caller
+      return { error: "OpenAI API key not configured." };
+    }
+
+    const promptText = `
+You are an expert career development coach specializing in personalized SWOT analysis.
+Your task is to generate a structured SWOT analysis framework based on the user's provided career goal.
+
+Career Goal: "${careerGoal}"
+
+For EACH of the four SWOT categories (Strengths, Weaknesses, Opportunities, Threats), you must:
+1. Generate exactly 3 insightful and distinct questions that will help the user critically assess that category in relation to their stated career goal.
+2. For each generated question, provide a concise, illustrative sample answer (1-2 sentences) that is also tailored to the career goal. This sample answer should exemplify the type of reflection expected.
+
+The entire output MUST be a single, valid JSON object. Do not include any text or explanations before or after the JSON object.
+The JSON object must have the following structure:
+{
+  "strengths": [
+    { "question": "Generated question 1 about strengths relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 1 for strengths, specific to ${careerGoal}." },
+    { "question": "Generated question 2 about strengths relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 2 for strengths, specific to ${careerGoal}." },
+    { "question": "Generated question 3 about strengths relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 3 for strengths, specific to ${careerGoal}." }
+  ],
+  "weaknesses": [
+    { "question": "Generated question 1 about weaknesses relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 1 for weaknesses, specific to ${careerGoal}." },
+    { "question": "Generated question 2 about weaknesses relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 2 for weaknesses, specific to ${careerGoal}." },
+    { "question": "Generated question 3 about weaknesses relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 3 for weaknesses, specific to ${careerGoal}." }
+  ],
+  "opportunities": [
+    { "question": "Generated question 1 about opportunities relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 1 for opportunities, specific to ${careerGoal}." },
+    { "question": "Generated question 2 about opportunities relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 2 for opportunities, specific to ${careerGoal}." },
+    { "question": "Generated question 3 about opportunities relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 3 for opportunities, specific to ${careerGoal}." }
+  ],
+  "threats": [
+    { "question": "Generated question 1 about threats relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 1 for threats, specific to ${careerGoal}." },
+    { "question": "Generated question 2 about threats relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 2 for threats, specific to ${careerGoal}." },
+    { "question": "Generated question 3 about threats relevant to ${careerGoal}?", "sampleAnswer": "Illustrative sample answer 3 for threats, specific to ${careerGoal}." }
+  ]
+}
+
+Ensure the questions are thought-provoking and the sample answers are practical examples.
+Replace "{careerGoal}" in your actual output with the user's provided career goal where appropriate in the generated questions and sample answers if it enhances specificity, but prioritize natural language.
+    `.replace(/\$\{careerGoal\}/g, careerGoal); // Ensure all placeholders are replaced.
+
+    console.log("Attempting to generate full AI SWOT structure for career goal:", careerGoal);
+    // For debugging the exact prompt being sent:
+    // console.log("Full prompt for SWOT structure generation:", promptText);
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo-1106", // Model that supports JSON mode
+        messages: [
+          { role: "system", content: "You are an AI assistant that outputs JSON." }, // System message can be simple when JSON mode is on
+          { role: "user", content: promptText }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.5, // Lower temperature for more predictable, structured output
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (content) {
+        console.log("Successfully received structured SWOT from AI.");
+        // The content should already be a stringified JSON object due to response_format.
+        // We attempt to parse it.
+        try {
+          const parsedJson = JSON.parse(content);
+          // Basic validation of the structure
+          if (parsedJson.strengths && parsedJson.weaknesses && parsedJson.opportunities && parsedJson.threats) {
+            return parsedJson;
+          } else {
+            console.error("AI response is valid JSON but not the expected SWOT structure:", parsedJson);
+            return { error: "AI response did not match the expected SWOT structure." };
+          }
+        } catch (e) {
+          console.error("Failed to parse JSON response from AI:", e, "\nRaw content:", content);
+          return { error: "Failed to parse AI's response. The response was not valid JSON." };
+        }
+      } else {
+        console.error("No content received from AI for SWOT structure.");
+        return { error: "No content received from AI." };
+      }
+    } catch (error) {
+      console.error("Error fetching full AI SWOT structure:", error);
+      if (error.response && error.response.status === 401) {
+        return { error: "Invalid OpenAI API key or insufficient credits." };
+      }
+      return { error: "Failed to fetch SWOT structure from AI. Check console for details." };
+    }
   };
 
   const openai = new OpenAI({
@@ -194,7 +332,13 @@ const handleNext = () => {
       {["strengths", "weaknesses", "opportunities", "threats"].includes(currentSection) && (
         <SWOTSection
           section={currentSection}
-          prompts={swotPrompts[currentSection]}
+          // Use AI-generated questions if available, otherwise fallback to static or empty
+          prompts={
+            aiSwotStructure && aiSwotStructure[currentSection]
+              ? aiSwotStructure[currentSection].map(item => item.question)
+              : swotPrompts[currentSection] // Fallback if AI structure not ready
+          }
+          // Sample answers would also come from aiSwotStructure, to be handled in SWOTSection in Phase 2
           responses={responses[currentSection]}
           onChange={(index, value) => handleChange(currentSection, index, value)}
           onNext={handleNext}
