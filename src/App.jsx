@@ -253,6 +253,75 @@ Replace "{careerGoal}" in your actual output with the user's provided career goa
     }
   };
 
+
+  const fetchMoreIdeas = async (careerGoal, swotCategory, specificAiQuestion, userAnswer) => {
+    if (!import.meta.env.VITE_OPENAI_API_KEY) {
+      console.error("OpenAI API key not found for fetching more ideas.");
+      return { error: "OpenAI API key not configured." };
+    }
+
+    const userAnswerContext = userAnswer && userAnswer.trim() !== "" ? userAnswer : "(User has not yet provided an answer or their answer is empty)";
+
+    const promptText = `
+You are an expert career development coach and SWOT analysis assistant.
+A user is working on their SWOT analysis and needs more ideas for a specific point.
+
+User's Career Goal: "${careerGoal}"
+Current SWOT Category: "${swotCategory}"
+
+The specific question they are addressing is:
+"${specificAiQuestion}"
+
+The user's current thoughts or answer to this question are:
+"${userAnswerContext}"
+
+Based on all the above information (career goal, SWOT category, the specific question, and their current thoughts/answer), please provide 2-3 additional, distinct bullet-point suggestions, ideas, or points for further reflection that would help them expand on their answer or consider new angles for this specific question.
+
+Focus on being concise and actionable. The ideas should be supplementary and not merely rephrase the user's current answer or the original question.
+
+Output ONLY the bullet-point suggestions. Do not include any other text, titles, or introductory/concluding remarks.
+For example:
+- Suggestion 1
+- Suggestion 2
+    `.trim();
+
+    console.log(`Fetching more ideas for: ${specificAiQuestion} (Category: ${swotCategory})`);
+    // console.log("Full prompt for more ideas:", promptText); // For debugging
+
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo", // Standard model is fine for this
+        messages: [
+          // System message can be minimal if the main instruction is clear
+          { role: "system", content: "You are a helpful assistant providing concise bullet-point ideas." },
+          { role: "user", content: promptText }
+        ],
+        temperature: 0.7,
+        max_tokens: 100, // Adjusted for 2-3 shorter suggestions
+        n: 1,
+      });
+
+      const content = completion.choices[0]?.message?.content;
+      if (content) {
+        const ideas = content
+          .split('\n')
+          .map(s => s.replace(/^[-*]\s*/, '').trim())
+          .filter(s => s.length > 0);
+        return ideas.length > 0 ? { ideas } : { ideas: ["No further ideas generated at this time."] };
+      }
+      return { ideas: ["No content received from AI for more ideas."] };
+    } catch (error) {
+      console.error("Error fetching more ideas:", error);
+      if (error.response && error.response.status === 401) {
+        return { error: "Invalid OpenAI API key or insufficient credits." };
+      }
+      return { error: "Failed to fetch more ideas from AI. Check console for details." };
+    }
+  };
+
+  // This is the existing function for single-section suggestions,
+  // which might be removed or repurposed fully if the "More Ideas" button replaces it.
+  // For now, keeping it separate. The new "More Ideas" will use fetchMoreIdeas.
   const fetchAISuggestions = async (sectionType, goal, sectionPrompts) => {
     if (!import.meta.env.VITE_OPENAI_API_KEY) {
       console.error("OpenAI API key not found.");
@@ -360,8 +429,8 @@ Replace "{careerGoal}" in your actual output with the user's provided career goa
           onChange={(index, value) => handleChange(currentSection, index, value)}
           onNext={handleNext}
           onBack={handleBack}
-          careerGoal={careerGoal}
-          // fetchAISuggestions={fetchAISuggestions} // To be removed as per user decision
+          careerGoal={careerGoal} // Ensure careerGoal is passed
+          fetchMoreIdeas={fetchMoreIdeas}
           onGoHome={handleGoHome}
         />
       )}
