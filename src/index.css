@@ -4,20 +4,25 @@
 
 /* Custom placeholder styling for textareas */
 textarea::placeholder {
-  @apply text-gray-500 italic;
+  color: #6B7280; /* Tailwind's text-gray-500 */
+  font-style: italic;
 }
 
-/* Firefox specific placeholder styling (older versions might need this) */
+/* Firefox specific placeholder styling */
 textarea::-moz-placeholder {
-  @apply text-gray-500 italic;
+  color: #6B7280; /* Tailwind's text-gray-500 */
+  font-style: italic;
   opacity: 1; /* Firefox adds a lower opacity by default */
 }
 
-/* Edge & IE specific placeholder styling */
+/* Edge specific placeholder styling */
 textarea:-ms-input-placeholder {
-  @apply text-gray-500 italic;
+  color: #6B7280; /* Tailwind's text-gray-500 */
+  font-style: italic;
 }
 
-textarea::-ms-input-placeholder { /* Even older Edge */
-  @apply text-gray-500 italic;
+/* IE specific placeholder styling (also used by older Edge versions) */
+textarea::-ms-input-placeholder {
+  color: #6B7280; /* Tailwind's text-gray-500 */
+  font-style: italic;
 }
