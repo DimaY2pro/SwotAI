@@ -79,6 +79,18 @@ const handleNext = () => {
     if (currentIndex > 0) setCurrentSection(steps[currentIndex - 1]);
   };
 
+  const handleGoHome = () => {
+    setCurrentSection("intro");
+    setMenteeName("");
+    setCareerGoal("");
+    setResponses({
+      strengths: new Array(swotPrompts.strengths.length).fill(""),
+      weaknesses: new Array(swotPrompts.weaknesses.length).fill(""),
+      opportunities: new Array(swotPrompts.opportunities.length).fill(""),
+      threats: new Array(swotPrompts.threats.length).fill("")
+    });
+  };
+
   const openai = new OpenAI({
     apiKey: import.meta.env.VITE_OPENAI_API_KEY,
     dangerouslyAllowBrowser: true, // Required for client-side usage
@@ -188,6 +200,7 @@ const handleNext = () => {
           onBack={handleBack}
           careerGoal={careerGoal}
           fetchAISuggestions={fetchAISuggestions}
+          onGoHome={handleGoHome} // Pass handleGoHome as onGoHome prop
         />
       )}
 
@@ -207,6 +220,12 @@ const handleNext = () => {
             </div>
           ))}
           <div className="mt-4 flex gap-4">
+  <button
+    onClick={handleGoHome}
+    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+  >
+    Home
+  </button>
   <button
     onClick={handleBack}
     className="px-4 py-2 bg-gray-300 text-[#152840] rounded hover:bg-gray-400"

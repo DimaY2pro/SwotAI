@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack, careerGoal, fetchAISuggestions }) => {
+const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack, careerGoal, fetchAISuggestions, onGoHome }) => {
   const isComplete = responses.every((ans) => ans.trim() !== "");
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -28,11 +28,29 @@ const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack, ca
     setIsLoadingSuggestions(false);
   }, [section]);
 
+  const handleResetSection = () => {
+    // Clear the textareas for the current section by calling onChange for each prompt
+    prompts.forEach((_, index) => {
+      onChange(index, "");
+    });
+    // Clear AI suggestions for the current section
+    setAiSuggestions([]);
+    setIsLoadingSuggestions(false);
+  };
+
   return (
     <div className="p-6 bg-white rounded shadow-md max-w-3xl mx-auto">
-      <h2 className="text-2xl font-semibold text-[#183B68] mb-6">
-        {section.charAt(0).toUpperCase() + section.slice(1)}
-      </h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold text-[#183B68]">
+          {section.charAt(0).toUpperCase() + section.slice(1)}
+        </h2>
+        <button
+          onClick={onGoHome}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+        >
+          Home
+        </button>
+      </div>
 
       <div className="my-6">
         <button
@@ -41,6 +59,12 @@ const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack, ca
           className="bg-[#FFBA00] text-[#152840] px-4 py-2 rounded hover:bg-[#FFD700] disabled:bg-gray-300"
         >
           {isLoadingSuggestions ? "Loading Suggestions..." : "Get AI Suggestions"}
+        </button>
+        <button
+          onClick={handleResetSection}
+          className="ml-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+        >
+          Reset Section
         </button>
         {aiSuggestions.length > 0 && (
           <div className="mt-4 p-4 border border-gray-200 rounded bg-gray-50">
