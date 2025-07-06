@@ -34,9 +34,11 @@ const swotPrompts = {
   ]
 };
 
+const DEFAULT_CAREER_GOAL = "e.g., To build a career in digital marketing with a focus on sustainability-driven brands";
+
 export default function App() {
   const [menteeName, setMenteeName] = useState("");
-  const [careerGoal, setCareerGoal] = useState("");
+  const [careerGoal, setCareerGoal] = useState(DEFAULT_CAREER_GOAL);
   const [currentSection, setCurrentSection] = useState("intro");
 
   // State for AI-generated questions and sample answers
@@ -120,7 +122,7 @@ const handleNext = () => {
   const handleGoHome = () => {
     setCurrentSection("intro");
     setMenteeName("");
-    setCareerGoal("");
+    setCareerGoal(DEFAULT_CAREER_GOAL); // Reset to default example text
     // Reset to initial static prompts structure for responses, and clear AI structure
     setResponses({
       strengths: new Array(swotPrompts.strengths.length).fill(""),
