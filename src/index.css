@@ -1,3 +1,23 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom placeholder styling for textareas */
+textarea::placeholder {
+  @apply text-gray-500 italic;
+}
+
+/* Firefox specific placeholder styling (older versions might need this) */
+textarea::-moz-placeholder {
+  @apply text-gray-500 italic;
+  opacity: 1; /* Firefox adds a lower opacity by default */
+}
+
+/* Edge & IE specific placeholder styling */
+textarea:-ms-input-placeholder {
+  @apply text-gray-500 italic;
+}
+
+textarea::-ms-input-placeholder { /* Even older Edge */
+  @apply text-gray-500 italic;
+}

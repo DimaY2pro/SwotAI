@@ -1,49 +1,36 @@
-import React, { useEffect } from "react"; // Removed useState for aiSuggestions if not used
+import React, { useState, useEffect } from "react";
 
 const SWOTSection = ({ section, promptItems, responses, onChange, onNext, onBack, onGoHome }) => {
-  // Ensure responses array matches the number of promptItems, defaulting to empty strings
-  // This check is more of a safeguard; App.jsx should ideally ensure `responses` is correctly sized.
   const currentResponses = responses || new Array(promptItems.length).fill("");
-  const isComplete = promptItems.every((_, index) => currentResponses[index] && currentResponses[index].trim() !== "");
+  const [editedFields, setEditedFields] = useState({});
 
-  // Removed aiSuggestions and isLoadingSuggestions state and related useEffect & handleFetchSuggestions
-  // as the "Get AI Suggestions" button is being removed for now.
+  // Effect to reset editedFields when the section or its prompts change
+  useEffect(() => {
+    setEditedFields({});
+  }, [section, promptItems]);
 
-  const handleResetSection = () => {
-    // Clear the textareas for the current section by calling onChange for each prompt
-    promptItems.forEach((_, index) => {
-      onChange(index, "");
-    });
-    // No local AI suggestions to clear anymore if the button is removed
+  // The useEffect that previously called onChange to pre-fill responses has been removed.
+  // App.jsx now directly initializes `responses` state with sample answers.
+
+  const handleInputChange = (index, value) => {
+    onChange(index, value); // Call the original onChange to update App's state
+    setEditedFields(prev => ({ ...prev, [index]: true })); // Mark field as edited
   };
 
-  // Effect to pre-fill responses with sampleAnswers when promptItems change (e.g. initial load with AI data for a section)
-  useEffect(() => {
-    if (promptItems && promptItems.length > 0) {
-      // Check if the responses are currently empty or not matching the sample answers.
-      // This prevents overwriting user's edits if they navigate away and back to a section
-      // without the section prop itself changing (which would trigger the App.jsx response reset).
-      // However, our current App.jsx logic for handleNext/handleBack re-initializes responses for the section.
-      // So, this effect will primarily run when a section's promptItems are first loaded.
-      promptItems.forEach((item, index) => {
-        // We only pre-fill if the current response is empty.
-        // If responses are already populated (e.g., user typed something, then navigated away and back),
-        // we might not want to overwrite.
-        // For now, the decision was to pre-fill. If `responses` are reset to "" in App.jsx on section change, this is fine.
-        // The `onChange` prop updates the state in App.jsx.
-        if (responses && (responses[index] === "" || responses[index] === undefined) && item.sampleAnswer) {
-          onChange(index, item.sampleAnswer);
-        } else if (!responses && item.sampleAnswer) { // Handles case where responses prop might be initially undefined for the section
-           onChange(index, item.sampleAnswer);
-        }
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [promptItems, section]); // onChange is a function, can cause re-renders if not memoized.
-  // For now, assuming App.jsx manages responses state reset correctly on section change.
-  // If onChange prop from App.jsx is stable (e.g., wrapped in useCallback), it can be added.
-  // Given current structure, section change in App.jsx should re-initialize `responses` for that section,
-  // making this pre-fill logic safe.
+  const handleResetSection = () => {
+    promptItems.forEach((_, index) => { // Iterate to get index
+      onChange(index, ""); // Clear to empty string, fulfilling Option F
+    });
+    setEditedFields({}); // Reset edited status for all fields, so placeholders will show
+  };
+
+  const isComplete = promptItems.every((item, index) => {
+    const response = currentResponses[index];
+    // A field is considered complete if:
+    // 1. It has a non-empty response.
+    // 2. It has been marked as edited by the user.
+    return response && response.trim() !== "" && editedFields[index] === true;
+  });
 
 
   return (
@@ -61,8 +48,6 @@ const SWOTSection = ({ section, promptItems, responses, onChange, onNext, onBack
       </div>
 
       <div className="my-6 flex justify-end">
-        {/* Container for buttons, only Reset Section for now */}
-        {/* "Get AI Suggestions" button removed */}
         <button
           onClick={handleResetSection}
           className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
@@ -72,20 +57,20 @@ const SWOTSection = ({ section, promptItems, responses, onChange, onNext, onBack
       </div>
 
       {promptItems.map((item, index) => (
-        <div key={index} className="mb-6"> {/* Increased bottom margin for spacing */}
+        <div key={index} className="mb-6">
           <label className="block font-medium mb-1 text-[#152840]">{item.question}</label>
-          {/* Sample Answer display will be handled in the next step - either pre-filling this textarea or showing separately */}
           <textarea
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900" // Standard text color
+            placeholder={item.sampleAnswer || ""} // Use sampleAnswer as placeholder
             value={currentResponses[index] || ""}
-            onChange={(e) => onChange(index, e.target.value)}
-            rows={3} // Default rows
+            onChange={(e) => handleInputChange(index, e.target.value)}
+            rows={3}
             required
           />
         </div>
       ))}
 
-      <div className="mt-8 flex justify-between"> {/* Increased top margin for spacing */}
+      <div className="mt-8 flex justify-between">
         <button
           onClick={onBack}
           className="px-4 py-2 bg-gray-200 text-[#152840] rounded hover:bg-gray-300"

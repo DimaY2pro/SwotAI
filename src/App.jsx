@@ -80,7 +80,8 @@ const handleNext = () => {
         const newResponses = {};
         for (const key in structure) {
           if (Array.isArray(structure[key])) {
-            newResponses[key] = new Array(structure[key].length).fill("");
+            // Initialize with sampleAnswer or empty string if sampleAnswer is missing
+            newResponses[key] = structure[key].map(item => item.sampleAnswer || "");
           }
         }
         setResponses(newResponses);
@@ -94,6 +95,19 @@ const handleNext = () => {
     return; // Important: Do not fall through to the old setCurrentSection logic
     // === End of new logic ===
   } else if (["strengths", "weaknesses", "opportunities", "threats"].includes(currentSection)) {
+    // Robustness check: Ensure AI samples were edited if aiSwotStructure is active
+    if (aiSwotStructure && aiSwotStructure[currentSection]) {
+      const sectionItems = aiSwotStructure[currentSection];
+      const uneditedSampleExists = sectionItems.some((item, idx) =>
+        responses[currentSection] && responses[currentSection][idx] === item.sampleAnswer && item.sampleAnswer && item.sampleAnswer.trim() !== ""
+      );
+      if (uneditedSampleExists) {
+        alert("Please review and modify all AI-generated sample answers before proceeding.");
+        return;
+      }
+    }
+
+    // Check for any empty answers
     const unanswered = responses[currentSection]?.some(answer => !answer || answer.trim() === "");
     if (unanswered) {
       alert("Please answer all questions in this section before proceeding.");
@@ -102,7 +116,7 @@ const handleNext = () => {
   }
 
   // This part will now only apply for navigation between SWOT sections and to summary
-  if (currentIndex < steps.length -1 && currentSection !== "intro") {
+  if (currentIndex < steps.length - 1 && currentSection !== "intro") {
     setCurrentSection(steps[currentIndex + 1]);
   } else if (currentSection === "intro" && !isLoadingSwotStructure && aiSwotStructure) {
     // This case should ideally be handled by the async flow above for initial load.
