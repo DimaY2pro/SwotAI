@@ -79,6 +79,18 @@ const handleNext = () => {
     if (currentIndex > 0) setCurrentSection(steps[currentIndex - 1]);
   };
 
+  const handleGoHome = () => {
+    setCurrentSection("intro");
+    setMenteeName("");
+    setCareerGoal("");
+    setResponses({
+      strengths: new Array(swotPrompts.strengths.length).fill(""),
+      weaknesses: new Array(swotPrompts.weaknesses.length).fill(""),
+      opportunities: new Array(swotPrompts.opportunities.length).fill(""),
+      threats: new Array(swotPrompts.threats.length).fill("")
+    });
+  };
+
   const openai = new OpenAI({
     apiKey: import.meta.env.VITE_OPENAI_API_KEY,
     dangerouslyAllowBrowser: true, // Required for client-side usage
@@ -90,30 +102,31 @@ const handleNext = () => {
       return ["OpenAI API key not configured. Please set VITE_OPENAI_API_KEY in your .env file."];
     }
 
-    const formattedPrompts = sectionPrompts && sectionPrompts.length > 0
-      ? `The guiding questions for this section are:\n${sectionPrompts.map((q, i) => `${i + 1}. ${q}`).join('\n')}`
-      : "No specific guiding questions provided for this section.";
+    // Just the list of questions, numbered.
+    const questionsList = sectionPrompts && sectionPrompts.length > 0
+      ? sectionPrompts.map((q, i) => `${i + 1}. ${q}`).join('\n')
+      : "No specific guiding questions were provided for this section.";
 
     const prompt = `
-      You are an expert career advisor.
-      The user's career goal is: "${goal}".
-      They are currently working on the "${sectionType.toUpperCase()}" section of their SWOT analysis.
-      ${formattedPrompts}
+      You are an expert career advisor assisting a user with their SWOT analysis for the career goal: "${goal}".
+      The user is currently working on the "${sectionType.toUpperCase()}" section.
 
-      Based on their career goal AND the guiding questions (if provided), generate 3-5 concise bullet points for "${sectionType.toUpperCase()}".
-      Focus on actionable and specific suggestions that directly help answer these questions or reflect on the SWOT category in light of the career goal.
-      Each point should be a short phrase.
-      Return the suggestions as a list of strings. For example:
+      The specific guiding questions for this section are:
+      ${questionsList}
+
+      Your task: Generate 3-5 concise, actionable bullet-point suggestions. Each suggestion should directly help the user reflect on or answer one or more of the guiding questions listed above, considering their career goal and the "${sectionType.toUpperCase()}" context.
+
+      For example, if a guiding question is "What are your key skills?", a relevant suggestion might be "- Identify technical skills like Python or Java relevant to ${goal}".
+
+      Please provide ONLY the bullet-point suggestions. Do not include titles, introductions, or any other text.
+      Format:
       - Suggestion 1
       - Suggestion 2
       - Suggestion 3
-
-      If the career goal or SWOT category is too vague, provide general advice for that category.
-      Do not include any introductory or concluding remarks, only the bullet points.
     `;
 
-    console.log(`Fetching AI suggestions for ${sectionType} related to career goal: ${goal} using specific prompts.`);
-    // console.log("Full prompt to AI:", prompt); // Uncomment for deep debugging
+    console.log(`Fetching AI suggestions for ${sectionType} (refined prompt)...`);
+    // console.log("Full prompt to AI:", prompt); // Strongly recommend enabling this for your testing
 
     try {
       const completion = await openai.chat.completions.create({
@@ -188,6 +201,7 @@ const handleNext = () => {
           onBack={handleBack}
           careerGoal={careerGoal}
           fetchAISuggestions={fetchAISuggestions}
+          onGoHome={handleGoHome} // Pass handleGoHome as onGoHome prop
         />
       )}
 
@@ -207,6 +221,12 @@ const handleNext = () => {
             </div>
           ))}
           <div className="mt-4 flex gap-4">
+  <button
+    onClick={handleGoHome}
+    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+  >
+    Home
+  </button>
   <button
     onClick={handleBack}
     className="px-4 py-2 bg-gray-300 text-[#152840] rounded hover:bg-gray-400"
