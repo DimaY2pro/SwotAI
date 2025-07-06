@@ -29,19 +29,6 @@ const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack, ca
         {section.charAt(0).toUpperCase() + section.slice(1)}
       </h2>
 
-      {prompts.map((question, index) => (
-        <div key={index} className="mb-4">
-          <label className="block font-medium mb-1 text-[#152840]">{question}</label>
-          <textarea
-            className="w-full border border-gray-300 rounded px-3 py-2"
-            value={responses[index] || ""}
-            onChange={(e) => onChange(index, e.target.value)}
-            rows={3}
-            required
-          />
-        </div>
-      ))}
-
       <div className="my-6">
         <button
           onClick={handleFetchSuggestions}
@@ -61,6 +48,19 @@ const SWOTSection = ({ section, prompts, responses, onChange, onNext, onBack, ca
           </div>
         )}
       </div>
+
+      {prompts.map((question, index) => (
+        <div key={index} className="mb-4">
+          <label className="block font-medium mb-1 text-[#152840]">{question}</label>
+          <textarea
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            value={responses[index] || ""}
+            onChange={(e) => onChange(index, e.target.value)}
+            rows={3}
+            required
+          />
+        </div>
+      ))}
 
       <div className="mt-4 flex justify-between">
         <button
