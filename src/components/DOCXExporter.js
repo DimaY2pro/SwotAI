@@ -1,18 +1,25 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Footer, PageNumber } from "docx";
 import { saveAs } from "file-saver";
 
+const getFormattedDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const BRAND_COLORS = {
-  NAVY: "183B68", // Hex without '#' for docx color attributes
+  NAVY: "183B68",
   AQUA: "7EC5B3",
   YELLOW: "F3B557",
   WHITE: "FFFFFF",
   BLACK: "000000",
-  GRAY: "808080", // A generic gray for footer text perhaps
+  GRAY: "808080",
 };
 
 const BASE_FONT = "Calibri";
 
-// Helper function to create a bullet point paragraph
 const createBullet = (text) => {
   return new Paragraph({
     text: text,
@@ -25,24 +32,24 @@ const createBullet = (text) => {
 
 export const generateDocx = (menteeName, careerGoal, responses) => {
   let lastExecutedStep = "DOCXExporter: Start of generateDocx";
-  console.log(lastExecutedStep);
-  console.log("DOCXExporter: Data received - Mentee Name:", menteeName, "Career Goal:", careerGoal);
+  // console.log(lastExecutedStep); // Keep console logs for now, can be removed in final cleanup
+  // console.log("DOCXExporter: Data received - Mentee Name:", menteeName, "Career Goal:", careerGoal);
 
   if (!menteeName || !careerGoal || !responses || Object.keys(responses).length === 0) {
     lastExecutedStep = "DOCXExporter: Aborted due to missing required data at function start.";
-    console.error(lastExecutedStep);
+    console.error(lastExecutedStep); // Keep error logs
     alert(lastExecutedStep);
     return;
   }
 
   try {
     lastExecutedStep = "DOCXExporter: Step 1 - Attempting to initialize Document object...";
-    console.log(lastExecutedStep);
+    // console.log(lastExecutedStep);
     const doc = new Document({
       creator: "AI SWOT Career Builder",
       title: "SWOT Analysis Report",
       description: `SWOT Analysis for ${menteeName}`,
-      sections: [], // Important: Initialize with an empty sections array
+      sections: [],
       styles: {
         paragraphStyles: [
           {
@@ -56,7 +63,7 @@ export const generateDocx = (menteeName, careerGoal, responses) => {
               size: 22, // 11pt
             },
             paragraph: {
-              spacing: { after: 100 }, // 5pt after normal paragraphs
+              spacing: { after: 100 },
             }
           },
           {
@@ -73,7 +80,7 @@ export const generateDocx = (menteeName, careerGoal, responses) => {
             },
             paragraph: {
               spacing: {
-                after: 360, // 18pt
+                after: 360,
               },
             },
           },
@@ -91,8 +98,8 @@ export const generateDocx = (menteeName, careerGoal, responses) => {
             },
             paragraph: {
               spacing: {
-                after: 120, // 6pt
-                before: 240, // 12pt
+                after: 120,
+                before: 240,
               },
             },
           },
@@ -102,7 +109,7 @@ export const generateDocx = (menteeName, careerGoal, responses) => {
 
     const sectionsContent = [];
     lastExecutedStep = "DOCXExporter: Step 2 - Adding Title...";
-    console.log(lastExecutedStep);
+    // console.log(lastExecutedStep);
     sectionsContent.push(
       new Paragraph({
         text: "SWOT Analysis Report",
@@ -113,7 +120,7 @@ export const generateDocx = (menteeName, careerGoal, responses) => {
     );
 
     lastExecutedStep = "DOCXExporter: Step 3 - Adding Mentee Name...";
-    console.log(lastExecutedStep);
+    // console.log(lastExecutedStep);
     sectionsContent.push(
       new Paragraph({
         children: [
@@ -125,7 +132,7 @@ export const generateDocx = (menteeName, careerGoal, responses) => {
     );
 
     lastExecutedStep = "DOCXExporter: Step 4 - Adding Career Goal...";
-    console.log(lastExecutedStep);
+    // console.log(lastExecutedStep);
     sectionsContent.push(
       new Paragraph({
         children: [
@@ -137,10 +144,10 @@ export const generateDocx = (menteeName, careerGoal, responses) => {
     );
 
     lastExecutedStep = "DOCXExporter: Step 5 - Starting to add SWOT Sections...";
-    console.log(lastExecutedStep);
+    // console.log(lastExecutedStep);
     for (const [sectionType, answers] of Object.entries(responses)) {
       lastExecutedStep = `DOCXExporter: Step 5a - Processing section: ${sectionType}`;
-      console.log(lastExecutedStep);
+      // console.log(lastExecutedStep);
       if (answers && Array.isArray(answers) && answers.length > 0) {
         sectionsContent.push(
           new Paragraph({
@@ -152,23 +159,18 @@ export const generateDocx = (menteeName, careerGoal, responses) => {
         );
         answers.forEach((answer, index) => {
           lastExecutedStep = `DOCXExporter: Step 5b - Adding answer ${index + 1} for ${sectionType}`;
-          console.log(lastExecutedStep);
-          if (answer && String(answer).trim() !== "") {
-            sectionsContent.push(createBullet(String(answer)));
-          } else {
-            lastExecutedStep = `DOCXExporter: Step 5c - Adding N/A for empty answer ${index + 1} for ${sectionType}`;
-            console.log(lastExecutedStep);
-            sectionsContent.push(createBullet("N/A"));
-          }
+          // console.log(lastExecutedStep);
+          const currentAnswer = (answer && String(answer).trim() !== "") ? String(answer) : "N/A";
+          sectionsContent.push(createBullet(currentAnswer));
         });
       } else {
         lastExecutedStep = `DOCXExporter: Step 5d - Skipping empty/invalid section: ${sectionType}`;
-        console.log(lastExecutedStep);
+        // console.log(lastExecutedStep);
       }
     }
 
     lastExecutedStep = "DOCXExporter: Step 6 - Adding content to the document section...";
-    console.log(lastExecutedStep);
+    // console.log(lastExecutedStep);
     doc.addSection({
       properties: {},
       footers: {
@@ -189,7 +191,7 @@ export const generateDocx = (menteeName, careerGoal, responses) => {
                 alignment: AlignmentType.RIGHT,
                 children: [
                     new TextRun({
-                        children: ["Page ", PageNumber.CURRENT, " of ", PageNumber.TOTAL_PAGES], // Corrected
+                        children: ["Page ", PageNumber.CURRENT, " of ", PageNumber.TOTAL_PAGES],
                         font: BASE_FONT,
                         size: 18, // 9pt
                         color: BRAND_COLORS.GRAY,
@@ -203,13 +205,15 @@ export const generateDocx = (menteeName, careerGoal, responses) => {
     });
 
     lastExecutedStep = "DOCXExporter: Step 7 - Attempting Packer.toBlob()...";
-    console.log(lastExecutedStep);
+    // console.log(lastExecutedStep);
     Packer.toBlob(doc).then((blob) => {
       lastExecutedStep = "DOCXExporter: Step 8 - Blob created successfully. Attempting saveAs()...";
-      console.log(lastExecutedStep, "Size:", blob.size);
-      saveAs(blob, `SWOT_Analysis_${String(menteeName || 'User').replace(/ /g, "_")}.docx`);
+      // console.log(lastExecutedStep, "Size:", blob.size);
+      const formattedDate = getFormattedDate();
+      const safeMenteeName = (menteeName || "User").replace(/[^a-zA-Z0-9]/g, "_");
+      saveAs(blob, `DLV04 SWOT ${safeMenteeName}_${formattedDate}.docx`);
       lastExecutedStep = "DOCXExporter: Step 9 - saveAs() called.";
-      console.log(lastExecutedStep);
+      // console.log(lastExecutedStep);
     }).catch((packerError) => {
       lastExecutedStep = "DOCXExporter: Error during Packer.toBlob() or saveAs()";
       console.error(lastExecutedStep, packerError);
