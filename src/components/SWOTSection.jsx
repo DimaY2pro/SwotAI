@@ -4,31 +4,59 @@ const SWOTSection = ({ section, promptItems, responses, onChange, onNext, onBack
   const currentResponses = responses || new Array(promptItems.length).fill("");
   const [editedFields, setEditedFields] = useState({});
 
-  // Effect to reset editedFields when the section or its prompts change
+  // Effect to initialize or reset editedFields when the section, prompts, or responses change.
   useEffect(() => {
-    setEditedFields({});
-  }, [section, promptItems]);
-
-  // The useEffect that previously called onChange to pre-fill responses has been removed.
-  // App.jsx now directly initializes `responses` state with sample answers.
+    const initialEditedFields = {};
+    if (promptItems && responses) {
+      promptItems.forEach((item, index) => {
+        const currentResponse = responses[index];
+        // A field is considered "edited" if:
+        // 1. There is a response for it (not empty/whitespace).
+        // 2. AND (EITHER the sampleAnswer is empty/whitespace OR the currentResponse is different from a non-empty sampleAnswer)
+        // This ensures that if a user simply accepts a pre-filled AI sample, it's not marked "edited"
+        // for this local state unless App.jsx's validation already passed it.
+        // If the user typed something themselves, it will be marked as edited.
+        if (currentResponse && currentResponse.trim() !== "") {
+          if (item.sampleAnswer && item.sampleAnswer.trim() !== "") {
+            // If there's a sample answer and it's not empty
+            if (currentResponse !== item.sampleAnswer) {
+              initialEditedFields[index] = true; // User changed it from sample
+            }
+            // If currentResponse IS THE SAME as a non-empty sampleAnswer, it remains not 'edited' by this local logic.
+            // App.jsx handles the initial validation of whether AI samples *must* be changed.
+            // This local 'editedFields' helps re-enable 'Next' if user *did* make a valid change.
+          } else {
+            // No sample answer, or sample answer is empty. Any non-empty response means user typed it.
+            initialEditedFields[index] = true;
+          }
+        }
+      });
+    }
+    setEditedFields(initialEditedFields);
+  }, [section, promptItems, responses]);
 
   const handleInputChange = (index, value) => {
-    onChange(index, value); // Call the original onChange to update App's state
-    setEditedFields(prev => ({ ...prev, [index]: true })); // Mark field as edited
+    onChange(index, value);
+    setEditedFields(prev => ({ ...prev, [index]: true }));
   };
 
   const handleResetSection = () => {
-    promptItems.forEach((_, index) => { // Iterate to get index
-      onChange(index, ""); // Clear to empty string, fulfilling Option F
+    promptItems.forEach((_, index) => {
+      onChange(index, "");
     });
-    setEditedFields({}); // Reset edited status for all fields, so placeholders will show
+    setEditedFields({});
   };
 
   const isComplete = promptItems.every((item, index) => {
     const response = currentResponses[index];
-    // A field is considered complete if:
-    // 1. It has a non-empty response.
-    // 2. It has been marked as edited by the user.
+    const isLastQuestion = index === promptItems.length - 1; // Assuming open-ended is always last
+
+    if (isLastQuestion) {
+      return true; // Optional open-ended question does not block "Next"
+    }
+
+    // For guided questions:
+    // Must have a non-empty response AND be marked as edited.
     return response && response.trim() !== "" && editedFields[index] === true;
   });
 
@@ -60,8 +88,8 @@ const SWOTSection = ({ section, promptItems, responses, onChange, onNext, onBack
         <div key={index} className="mb-6">
           <label className="block font-medium mb-1 text-[#152840]">{item.question}</label>
           <textarea
-            className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900" // Standard text color
-            placeholder={item.sampleAnswer || ""} // Use sampleAnswer as placeholder
+            className="w-full border border-gray-300 rounded px-3 py-2 text-gray-900"
+            placeholder={item.sampleAnswer || ""}
             value={currentResponses[index] || ""}
             onChange={(e) => handleInputChange(index, e.target.value)}
             rows={3}

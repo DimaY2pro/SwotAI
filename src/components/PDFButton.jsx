@@ -1,6 +1,14 @@
 import React from "react";
 import jsPDF from "jspdf";
-import "jspdf-autotable"; // Optional: good for future table layouts
+import "jspdf-autotable";
+
+const getFormattedDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const PDFButton = ({ menteeName, careerGoal, responses }) => {
   const generatePDF = () => {
@@ -15,68 +23,60 @@ const PDFButton = ({ menteeName, careerGoal, responses }) => {
       navy: "#183B68"
     };
 
-    // Custom font setup (using core fonts like Helvetica for simplicity)
     pdf.setFont("helvetica");
 
-    // --- HEADER ---
     pdf.setFillColor(brandColors.navy);
-    pdf.rect(0, 0, pageWidth, 60, "F"); // header banner
+    pdf.rect(0, 0, pageWidth, 60, "F");
     pdf.setTextColor("#FFFFFF");
     pdf.setFontSize(16);
     pdf.setFont("helvetica", "bold");
     pdf.text("YouthToPro – SWOT Analysis Document", margin, 40);
 
-    // --- Mentee Info ---
     pdf.setFontSize(12);
     pdf.setTextColor("#000000");
     pdf.setFont("helvetica", "normal");
-    pdf.text(`Name: ${menteeName}`, margin, 90);
-    pdf.text(`Career Goal: ${careerGoal}`, margin, 110);
+    pdf.text(`Name: ${menteeName || "N/A"}`, margin, 90); // Added fallback for name
+    pdf.text(`Career Goal: ${careerGoal || "N/A"}`, margin, 110); // Added fallback for goal
 
-    // --- SWOT Content ---
     const pageContentWidth = pageWidth - 2 * margin;
-    const columnWidth = (pageContentWidth - margin / 2) / 2; // Usable width for one column, with a small gap
+    const columnWidth = (pageContentWidth - margin / 2) / 2;
     const columnGap = margin / 2;
 
-    const swotOrder = ["strengths", "weaknesses", "opportunities", "threats"];
     const sectionDetails = {
       strengths: { title: "Strengths", color: brandColors.aqua },
       weaknesses: { title: "Weaknesses", color: brandColors.yellow },
       opportunities: { title: "Opportunities", color: brandColors.navy },
-      threats: { title: "Threats", color: "#999999" }
+      threats: { title: "Threats", color: "#999999" } // A neutral color for threats
     };
 
     let currentX = margin;
-    let currentY = 150; // Initial Y position for the first row of SWOTs
-    let maxYThisRow = currentY; // Tracks the max Y reached by content in the current row of sections
+    let currentY = 150;
+    let maxYThisRow = currentY;
 
-    const lineHeight = 16; // Approximate height of one line of text
+    const lineHeight = 16;
     const headerHeight = 24;
-    const contentPaddingTop = 16; // Space between header and content text
-    const sectionPaddingBottom = 20; // Space after a section's content
+    const contentPaddingTop = 16;
+    const sectionPaddingBottom = 20;
 
     const checkAndAddPage = (neededHeight) => {
-      if (currentY + neededHeight > pdf.internal.pageSize.getHeight() - margin - 40) { // 40 for footer
+      if (currentY + neededHeight > pdf.internal.pageSize.getHeight() - margin - 40) {
         drawFooter(pdf, pageWidth, brandColors.navy, "www.youthtoprofessionals.org");
         pdf.addPage();
         drawHeader(pdf, pageWidth, margin, brandColors.navy);
-        currentY = margin + 60; // Reset Y to top of new page (below header)
+        currentY = margin + 60;
         maxYThisRow = currentY;
-        return true; // Page was added
+        return true;
       }
-      return false; // No page added
+      return false;
     };
 
-    // Function to draw a single SWOT section
     const drawSwotSection = (key, xPos, startY) => {
       const { title, color } = sectionDetails[key];
       let sectionContentY = startY;
-      let sectionHeight = 0;
+      // let sectionHeight = 0; // sectionHeight was unused
 
-      // Check for page break before drawing header
-      checkAndAddPage(headerHeight + contentPaddingTop + lineHeight); // Min height for header + one line
+      checkAndAddPage(headerHeight + contentPaddingTop + lineHeight);
 
-      // Section Header
       pdf.setFillColor(color);
       pdf.rect(xPos, sectionContentY, columnWidth, headerHeight, "F");
       pdf.setFontSize(13);
@@ -84,23 +84,24 @@ const PDFButton = ({ menteeName, careerGoal, responses }) => {
       pdf.setFont("helvetica", "bold");
       pdf.text(title, xPos + 10, sectionContentY + 16);
       sectionContentY += headerHeight + contentPaddingTop;
-      sectionHeight += headerHeight + contentPaddingTop;
+      // sectionHeight += headerHeight + contentPaddingTop; // Unused
 
-      // Section Content
       pdf.setFontSize(11);
       pdf.setTextColor("#000000");
       pdf.setFont("helvetica", "normal");
 
-      if (responses[key] && responses[key].length > 0) {
-        responses[key].forEach((answer) => {
-          const lines = pdf.splitTextToSize(`• ${answer}`, columnWidth - 20); // -20 for padding within column
+      const sectionResponses = responses[key];
+      if (sectionResponses && Array.isArray(sectionResponses) && sectionResponses.length > 0) {
+        sectionResponses.forEach((answer) => {
+          const currentAnswer = (answer && String(answer).trim() !== "") ? String(answer) : "N/A";
+          const lines = pdf.splitTextToSize(`• ${currentAnswer}`, columnWidth - 20);
           const textBlockHeight = lines.length * lineHeight;
 
-          checkAndAddPage(textBlockHeight); // Check if this block fits
+          checkAndAddPage(textBlockHeight);
 
           pdf.text(lines, xPos + 10, sectionContentY);
           sectionContentY += textBlockHeight;
-          sectionHeight += textBlockHeight;
+          // sectionHeight += textBlockHeight; // Unused
         });
       } else {
          const lines = pdf.splitTextToSize("• N/A", columnWidth - 20);
@@ -108,58 +109,55 @@ const PDFButton = ({ menteeName, careerGoal, responses }) => {
          checkAndAddPage(textBlockHeight);
          pdf.text(lines, xPos + 10, sectionContentY);
          sectionContentY += textBlockHeight;
-         sectionHeight += textBlockHeight;
+         // sectionHeight += textBlockHeight; // Unused
       }
 
-      sectionHeight += sectionPaddingBottom;
-      return sectionContentY + sectionPaddingBottom; // Return the Y position after this section
+      // sectionHeight += sectionPaddingBottom; // Unused
+      return sectionContentY + sectionPaddingBottom;
     };
 
     // Strengths and Weaknesses (Top Row)
-    let yAfterStrengths = drawSwotSection("strengths", currentX, currentY);
-    let yAfterWeaknesses = drawSwotSection("weaknesses", currentX + columnWidth + columnGap, currentY);
-    // maxYThisRow = Math.max(yAfterStrengths, yAfterWeaknesses); // No longer needed to stack directly
+    drawSwotSection("strengths", currentX, currentY); // yAfterStrengths not strictly needed if not comparing for maxYThisRow logic
+    drawSwotSection("weaknesses", currentX + columnWidth + columnGap, currentY); // yAfterWeaknesses not strictly needed
 
-    // --- Force page break for Opportunities and Threats ---
-    // Ensure footer is drawn on the current page before adding a new one, if it's not already the first page.
-    if (pdf.internal.getCurrentPageInfo().pageNumber > 0) {
+    // Force page break for Opportunities and Threats
+    if (pdf.internal.getCurrentPageInfo().pageNumber >= 1) { // Check if we are on page 1 or more
         drawFooter(pdf, pageWidth, brandColors.navy, "www.youthtoprofessionals.org");
     }
     pdf.addPage();
     drawHeader(pdf, pageWidth, margin, brandColors.navy);
-    currentY = margin + 60; // Reset Y to top of new page (below header)
-    maxYThisRow = currentY; // Reset maxYThisRow for the new page context
-    currentX = margin; // Reset X for the new row
+    currentY = margin + 60;
+    // maxYThisRow = currentY; // Reset for new page, though not used if sections don't dynamically adjust Y
+    currentX = margin;
 
     // Opportunities and Threats (Now on a New Page)
-    let yAfterOpportunities = drawSwotSection("opportunities", currentX, currentY);
-    let yAfterThreats = drawSwotSection("threats", currentX + columnWidth + columnGap, currentY);
-    maxYThisRow = Math.max(yAfterOpportunities, yAfterThreats);
+    drawSwotSection("opportunities", currentX, currentY);
+    drawSwotSection("threats", currentX + columnWidth + columnGap, currentY);
+    // maxYThisRow = Math.max(yAfterOpportunities, yAfterThreats); // Not strictly needed
 
-    // --- FOOTER ---
-    // Ensure footer is drawn on the last page if content didn't trigger a page break forcing it
-    // This check is to prevent double footers if checkAndAddPage already added one
-    if (pdf.internal.getNumberOfPages() === pdf.internal.getCurrentPageInfo().pageNumber) {
-        drawFooter(pdf, pageWidth, brandColors.navy, "www.youthtoprofessionals.org");
-    }
+    // Ensure footer is drawn on the last page
+    drawFooter(pdf, pageWidth, brandColors.navy, "www.youthtoprofessionals.org");
 
-    // Save
-    pdf.save(`${menteeName}_SWOT_Document.pdf`);
+
+    const formattedDate = getFormattedDate();
+    const safeMenteeName = (menteeName || "User").replace(/[^a-zA-Z0-9]/g, "_");
+    pdf.save(`DLV04 SWOT ${safeMenteeName}_${formattedDate}.pdf`);
   };
 
-  // Draws footer on each page
   const drawFooter = (pdf, width, color, website) => {
-    const height = pdf.internal.pageSize.getHeight();
-    pdf.setDrawColor(255, 255, 255);
+    const pageCount = pdf.internal.getNumberOfPages();
+    const currentPage = pdf.internal.getCurrentPageInfo().pageNumber;
+    const pageText = `Page ${currentPage} of ${pageCount}`;
+
+    const footerY = pdf.internal.pageSize.getHeight() - 40;
     pdf.setFillColor(color);
-    pdf.rect(0, height - 40, width, 40, "F");
+    pdf.rect(0, footerY, width, 40, "F");
     pdf.setTextColor("#FFFFFF");
     pdf.setFontSize(10);
-    pdf.text("YouthToPro | Empowering Arab Youth", 40, height - 20);
-    pdf.text(website, width - 200, height - 20);
+    pdf.text("YouthToPro | Empowering Arab Youth", 40, footerY + 25); // Adjusted Y for better centering
+    pdf.text(pageText, width - 40 - pdf.getStringUnitWidth(pageText) * 10, footerY + 25); // Right align page number
   };
 
-  // Optional: redraw header on page breaks
   const drawHeader = (pdf, width, margin, color) => {
     pdf.setFillColor(color);
     pdf.rect(0, 0, width, 60, "F");
@@ -181,5 +179,3 @@ const PDFButton = ({ menteeName, careerGoal, responses }) => {
 };
 
 export default PDFButton;
-
-
