@@ -1,14 +1,15 @@
 # AI SWOT Career Builder (Vite + React)
 
-This project is a web application designed to help users reflect on their Strengths, Weaknesses, Opportunities, and Threats (SWOT) in a structured flow, with AI-powered suggestions to enhance their career planning. It's built using React with Vite.
+This project is a web application designed to help users reflect on their Strengths, Weaknesses, Opportunities, and Threats (SWOT) in a structured flow, with AI-powered questions to enhance their career planning. It's built using React with Vite.
 
 ## Features
 
 - Step-by-step SWOT analysis (Strengths, Weaknesses, Opportunities, Threats).
-- Mandatory questions for each section.
-- AI-generated suggestions for each SWOT category based on your career goal (powered by OpenAI).
+- Guided questions for each SWOT category, with an additional optional open-ended question to add further points.
+- AI-generated questions tailored to your career goal for each SWOT category (powered by OpenAI).
 - Summary view of all inputs.
-- PDF export of the SWOT analysis summary, including branding.
+- Export your SWOT analysis summary as a PDF or DOCX file, including branding and standardized filenames (`DLV04 SWOT Name_Date.ext`).
+- Displays YouthToPro logo on the introduction page.
 
 ## Setup and Running the Project
 
@@ -24,7 +25,7 @@ This project is a web application designed to help users reflect on their Streng
     ```
 
 3.  **Set up OpenAI API Key:**
-    This project uses the OpenAI API to generate SWOT suggestions. You will need an OpenAI API key.
+    This project uses the OpenAI API to generate SWOT questions. You will need an OpenAI API key.
 
     *   Create a file named `.env` in the root of the project (alongside `package.json`).
     *   Add your OpenAI API key to the `.env` file like this:
@@ -45,10 +46,10 @@ This project is a web application designed to help users reflect on their Streng
 
 ## How to Use
 
-1.  Open the application in your browser.
+1.  Open the application in your browser. You'll be greeted by the YouthToPro logo on the intro page.
 2.  Enter your name and your primary career goal.
 3.  Proceed through each SWOT section (Strengths, Weaknesses, Opportunities, Threats).
-    *   Answer the guiding questions in the text areas.
-    *   Click "Get AI Suggestions" to receive AI-powered ideas based on your career goal for that specific section.
+    *   Answer the AI-generated (or fallback) guiding questions in the text areas.
+    *   Utilize the final open-ended question in each section to add any other points you wish to include (this question is optional to proceed).
 4.  Review your inputs on the Summary page.
-5.  Click "Download PDF" to get a PDF copy of your SWOT analysis.
+5.  Click "Download PDF" or "Download DOCX" to get a copy of your SWOT analysis. Files will be named using the convention `DLV04 SWOT YourName_YYYY-MM-DD.ext`.
