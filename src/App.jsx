@@ -342,9 +342,14 @@ Replace "{careerGoal}" in your actual output with the user's provided career goa
           </label>
           <button
             onClick={handleNext}
-            className="bg-[#183B68] text-white px-4 py-2 rounded mt-4 hover:bg-[#152840]"
+            className={`px-4 py-2 rounded mt-4 text-white ${
+              isLoadingSwotStructure
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-[#183B68] hover:bg-[#152840]"
+            }`}
+            disabled={isLoadingSwotStructure}
           >
-            Start SWOT Analysis
+            {isLoadingSwotStructure ? "Loading..." : "Start SWOT Analysis"}
           </button>
         </div>
       )}
