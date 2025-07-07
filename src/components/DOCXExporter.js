@@ -13,9 +13,22 @@ const createBullet = (text) => {
 };
 
 export const generateDocx = (menteeName, careerGoal, responses) => {
-  const doc = new Document({
-    creator: "AI SWOT Career Builder",
-    title: "SWOT Analysis Report",
+  console.log("DOCXExporter: generateDocx called.");
+  console.log("DOCXExporter: menteeName:", menteeName);
+  console.log("DOCXExporter: careerGoal:", careerGoal);
+  console.log("DOCXExporter: responses:", responses);
+
+  if (!menteeName || !careerGoal || !responses || Object.keys(responses).length === 0) {
+    console.error("DOCXExporter: Aborting - missing required data.");
+    // This check is mostly defensive, primary validation should be in DOCXButton
+    return;
+  }
+
+  try {
+    console.log("DOCXExporter: Creating Document object...");
+    const doc = new Document({
+      creator: "AI SWOT Career Builder",
+      title: "SWOT Analysis Report",
     description: `SWOT Analysis for ${menteeName}`,
     styles: {
       paragraphStyles: [
@@ -129,11 +142,18 @@ export const generateDocx = (menteeName, careerGoal, responses) => {
   });
 
   // Pack and save
-  Packer.toBlob(doc).then((blob) => {
-    saveAs(blob, `SWOT_Analysis_${menteeName.replace(/ /g, "_")}.docx`);
-    console.log("Document created successfully");
-  }).catch((err) => {
-    console.error("Error creating document: ", err);
-    alert("Error creating DOCX file. Please check the console for details.");
-  });
+    console.log("DOCXExporter: Attempting Packer.toBlob()...");
+    Packer.toBlob(doc).then((blob) => {
+      console.log("DOCXExporter: Blob created successfully. Size:", blob.size);
+      console.log("DOCXExporter: Attempting saveAs()...");
+      saveAs(blob, `SWOT_Analysis_${menteeName.replace(/ /g, "_")}.docx`);
+      console.log("DOCXExporter: saveAs() called. Document download should have been triggered.");
+    }).catch((packerError) => {
+      console.error("DOCXExporter: Error during Packer.toBlob(): ", packerError);
+      alert("Error preparing DOCX file content. Please check the console for details.");
+    });
+  } catch (docCreationError) {
+    console.error("DOCXExporter: Error creating Document object or adding sections: ", docCreationError);
+    alert("Error initializing DOCX document. Please check the console for details.");
+  }
 };

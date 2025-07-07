@@ -387,16 +387,16 @@ Replace "{careerGoal}" in your actual output with the user's provided career goa
               </ul>
             </div>
           ))}
-          <div className="mt-4 flex gap-4">
+          <div className="mt-4 flex flex-wrap gap-4 items-center"> {/* Added flex-wrap and items-center */}
   <button
     onClick={handleGoHome}
-    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+    className="px-4 py-2 rounded text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-sky-600 hover:bg-sky-700 focus:ring-sky-500 transition ease-in-out duration-150"
   >
     Home
   </button>
   <button
     onClick={handleBack}
-    className="px-4 py-2 bg-gray-300 text-[#152840] rounded hover:bg-gray-400"
+    className="px-4 py-2 rounded text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gray-500 hover:bg-gray-600 focus:ring-gray-400 transition ease-in-out duration-150"
   >
     Back
   </button>

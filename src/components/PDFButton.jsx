@@ -172,9 +172,10 @@ const PDFButton = ({ menteeName, careerGoal, responses }) => {
   return (
     <button
       onClick={generatePDF}
-      className="bg-[#183B68] text-white px-4 py-2 rounded hover:bg-[#152840] mt-4"
+      className="px-4 py-2 rounded text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 transition ease-in-out duration-150"
+      title="Download SWOT Analysis as PDF"
     >
-      Download PDF Summary
+      Download PDF
     </button>
   );
 };
